@@ -21,14 +21,13 @@
 "archives" = [
   "build-corecrypto-14.py",
   "build-corecrypto-14.py --namespace",
-  "component:ArmDTPlatform",
-  "component:ArmCpu",
-  "component:SoftwareAES",
-  "build-software-aes-bindings.py",
-  "component:RamBlock",
+  "build-arm-driver.py ArmDTPlatform",
+  "build-arm-driver.py ArmCpu",
+  "build-arm-driver.py NativeAES",
+  "build-native-aes-bindings.py",
   "build-mockfs-fixture.py",
-  "build-boot-progress.py",
   "build-libpthread-kernel.py",
+  "build-link-stubs.py",
 ]
 "config_fragments" = ["arch:configs/common.config", "soc:configs/sm8550.config", "os:configs/ipados.config"]
 "patch_series" = ["arch:patches/xnu/series", "soc:patches/xnu/series", "os:patches/xnu/series", "device:patches/xnu/series"]

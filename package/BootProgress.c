@@ -624,6 +624,29 @@ void boot_progress_stage(const char *text) {
   if (!started && !state.frozen) draw(now);
   release();
 }
+// Diagnostic stages that precede a possible hard stop must be visible before
+// the next one-second monitor refresh. Update the history as usual, then paint
+// one status row synchronously. If another display writer owns render_busy,
+// retain the history update and let the normal monitor repaint it.
+void boot_progress_stage_sync(const char *text) {
+  if (!enabled || !take()) return;
+  unsigned now=seconds();
+  char stamped[BP_COLS], name[32]={0};
+  if (started && !ml_at_interrupt_context()) {
+    proc_selfname(name,sizeof(name));
+    snprintf(stamped,sizeof(stamped),"pid=%d %.31s %.70s",proc_selfpid(),name,text);
+    text=stamped;
+  }
+  bp_stage(&state,text,now);
+  if (display.bound && !__atomic_exchange_n(&render_busy,1,__ATOMIC_ACQUIRE)) {
+    line(5,text,0xff00ffff);
+    __asm__ volatile("dsb sy" ::: "memory");
+    __atomic_store_n(&render_busy,0,__ATOMIC_RELEASE);
+  } else if (!started && !state.frozen) {
+    draw(now);
+  }
+  release();
+}
 void boot_progress_process_stage(int pid,const char *name,const char *text) {
   if(!enabled || !take())return;
   char stamped[BP_COLS];unsigned now=seconds();
